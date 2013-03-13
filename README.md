@@ -4,13 +4,13 @@ Automatic parsing of json and xml request bodies requires care. Beyond vulnerabi
 
     User.find_by_secret_token(0)
 
-returns a user with a secret token that does not look to mysql like a valid integer instead of returning nil. This can be avoided by calling `to_s` on parameters that should be strings. For more details see the [security advisory](http://groups.google.com/group/rubyonrails-security/browse_thread/thread/64e747e461f98c25). It is easy to forget to do this and it goes against the philosophy of "secure by default".
+returns a user with a secret token that does not look to mysql like a valid integer instead of returning nil. Rails 3.2.12 contains some mitigations for this (the above example does not work on rails 3.2.12 and above) but can't catch all cases. You can avoid this by calling `to_s` on parameters that should be strings. For more details see the [security advisory](http://groups.google.com/group/rubyonrails-security/browse_thread/thread/64e747e461f98c25). It is easy to forget to do this and it goes against the philosophy of "secure by default".
 
 An easy mitigation is to simply disable this parsing by removing mime types from `ActionDispatch::ParamsParser::DEFAULT_PARSERS` this is a change that affects all controllers. 
 
 This gem allows the automatic parameter parsing to be turned on  per controller and per action, so that (for example) api endpoints that need to accept json and/or xml can continue to work (and be audited for their parameter usage) but reducing the surface of attack by not allowing json bodies for all those requests that do not need it.
 
-The default is for such parsing to be disabled for all controllers
+The default is for such parsing to be disabled for all controllers.
 
 ## Installation
 
@@ -58,7 +58,7 @@ Subclasses inherit their parent classes' settings
 
 ## Caveats
 
-Ordinarily parameters are parsed by a Rack middleware. This gem defers parsing until the request is processed to the controller: the parsed parameters will not be available to middleware code that runs before this.
+Ordinarily parameters are parsed by a Rack middleware. This gem defers parsing until the request is processed by the controller: the parsed parameters will not be available to middleware code that runs before this.
 
 ## Contributing
 
