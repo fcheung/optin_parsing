@@ -49,6 +49,7 @@ module OptinParsing
         if should_decode_body(options)
           if data = decode_formatted_parameters(strategy)
             params.merge!(data)
+            Rails.logger.info "Parsed #{request.content_mime_type}: #{data.inspect}"
           end
         end
       end  
