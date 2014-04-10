@@ -12,7 +12,7 @@ describe 'optin_parsing controller with controller additions included', :type =>
       @parsed_params = params.except(:controller, :action)
       head :ok
     end
-  
+
     def _routes
       @routes
     end
@@ -67,6 +67,16 @@ describe 'optin_parsing controller with controller additions included', :type =>
       context 'unconditionally' do
         preconfigured_controller do
           parses :json
+        end
+
+        it 'logs parsed parameters honouring filter_parameters config' do
+          request.env['RAW_POST_DATA'] = json
+          request.env['CONTENT_TYPE']  = Mime::JSON.to_s
+          Rails.configuration.filter_parameters = [:test]
+
+          controller.should_receive(:log_parsed).with({'test' => '[FILTERED]'})
+
+          put :index
         end
 
         it { should parse_parameters.of_type(Mime::JSON).for_action(:index).with_body(json) }
