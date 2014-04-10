@@ -77,7 +77,7 @@ module OptinParsing
         request.body.rewind if request.body.respond_to?(:rewind)
         data.with_indifferent_access
       when :json
-        data = request.deep_munge ActiveSupport::JSON.decode(request.body)
+        data = request.deep_munge ActiveSupport::JSON.decode(request.body.read)
         request.body.rewind if request.body.respond_to?(:rewind)
         data = {:_json => data} unless data.is_a?(Hash)
         data.with_indifferent_access
