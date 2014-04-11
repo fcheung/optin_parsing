@@ -21,14 +21,14 @@ module OptinParsing
       # @param [Symbol, Mime::Type] mime_type_or_short_cut
       # @option options [Array,Symbol] :except A list of actions for which parsing should not be enabled
       # @option options [Array,Symbol] :only A list of actions for which parsing should be enabled
-      
+
       def parses mime_type_or_short_cut, options={}, &block
 
         case mime_type_or_short_cut
         when Mime::Type
           raise ArgumentError, "You must supply a block when specifying a mime type" unless block
-          self.parse_strategies = parse_strategies.merge(mime_type_or_short_cut => [block, normalize_optin_options(options)]) 
-        when :xml 
+          self.parse_strategies = parse_strategies.merge(mime_type_or_short_cut => [block, normalize_optin_options(options)])
+        when :xml
           self.parse_strategies = parse_strategies.merge(Mime::XML => [:xml, normalize_optin_options(options)])
         when :json
           self.parse_strategies = parse_strategies.merge(Mime::JSON => [:json, normalize_optin_options(options)])
@@ -49,12 +49,12 @@ module OptinParsing
         if should_decode_body(options)
           if data = decode_formatted_parameters(strategy)
             params.merge!(data)
-            Rails.logger.info "Parsed #{request.content_mime_type}: #{data.inspect}"
+            log_parsed(apply_filter_parameters(data))
           end
         end
-      end  
-      super 
-    end      
+      end
+      super
+    end
 
     private
 
@@ -77,13 +77,22 @@ module OptinParsing
         request.body.rewind if request.body.respond_to?(:rewind)
         data.with_indifferent_access
       when :json
-        data = request.deep_munge ActiveSupport::JSON.decode(request.body)
+        data = request.deep_munge ActiveSupport::JSON.decode(request.body.read)
         request.body.rewind if request.body.respond_to?(:rewind)
         data = {:_json => data} unless data.is_a?(Hash)
         data.with_indifferent_access
       else
         false
       end
+    end
+
+    def log_parsed(data)
+      Rails.logger.info "Parsed #{request.content_mime_type}: #{data.inspect}"
+    end
+
+    def apply_filter_parameters(data)
+      parameter_filter = ActionDispatch::Http::ParameterFilter.new(Rails.configuration.filter_parameters)
+      parameter_filter.filter(data)
     end
   end
 end
