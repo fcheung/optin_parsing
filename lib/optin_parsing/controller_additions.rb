@@ -73,11 +73,11 @@ module OptinParsing
       when Proc
         strategy.call(request.raw_post)
       when :xml
-        data = request.deep_munge(Hash.from_xml(request.body.read) || {})
+        data = ActionDispatch::Request::Utils.deep_munge(Hash.from_xml(request.body.read) || {})
         request.body.rewind if request.body.respond_to?(:rewind)
         data.with_indifferent_access
       when :json
-        data = request.deep_munge ActiveSupport::JSON.decode(request.body.read)
+        data = ActionDispatch::Request::Utils.deep_munge ActiveSupport::JSON.decode(request.body.read)
         request.body.rewind if request.body.respond_to?(:rewind)
         data = {:_json => data} unless data.is_a?(Hash)
         data.with_indifferent_access
